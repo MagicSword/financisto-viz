@@ -1,12 +1,13 @@
 // Include gulp
-var gulp = require('gulp');
+const gulp = require('gulp');
 
 // Include Our Plugins
-var jshint = require('gulp-jshint');
-var sass = require('gulp-sass');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var rename = require('gulp-rename');
+const jshint = require('gulp-jshint');
+const sass = require('gulp-sass');
+const concat = require('gulp-concat');
+const uglify = require('gulp-uglify');
+const rename = require('gulp-rename');
+const Server = require('karma').Server;
 
 // Lint Task
 gulp.task('lint', function() {
@@ -36,6 +37,13 @@ gulp.task('scripts', function() {
 gulp.task('watch', function() {
     gulp.watch('js/*.js', ['lint', 'scripts']);
     gulp.watch('scss/*.scss', ['sass']);
+});
+
+gulp.task('test', function(done) {
+  new Server({
+    configFile: __dirname + '/karma.conf.js',
+    singleRun: true
+  }, () => {done();}).start();
 });
 
 // Default Task
