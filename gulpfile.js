@@ -7,7 +7,15 @@ const sass = require('gulp-sass');
 const concat = require('gulp-concat');
 const uglify = require('gulp-uglify');
 const rename = require('gulp-rename');
+
 const Server = require('karma').Server;
+
+const plugins = require('gulp-load-plugins')({
+  pattern: ['gulp-*', 'main-bower-files'],
+  replaceString: /\bgulp[\-.]/
+});
+
+const dest = 'www/public';
 
 // Lint Task
 gulp.task('lint', function() {
@@ -24,7 +32,7 @@ gulp.task('sass', function() {
 });
 
 // Concatenate & Minify JS
-gulp.task('scripts', function() {
+gulp.task('scripts', () => {
     return gulp.src('js/*.js')
         .pipe(concat('all.js'))
         .pipe(gulp.dest('dist'))
@@ -45,6 +53,11 @@ gulp.task('test', function(done) {
     singleRun: true
   }, () => {done();}).start();
 });
+
+// gulp.src(plugins.mainBrowerFiles())
+//   .pipe(plugins.filter('*.js'))
+//   .pipe(gulp.dest(dest + 'js'));
+
 
 // Default Task
 gulp.task('default', ['lint', 'sass', 'scripts', 'watch']);
