@@ -7,6 +7,9 @@ const loki = require('lokijs'),
 const _ = require('lodash');
 const moment = require('moment');
 
+const EventEmitter = require('events').EventEmitter
+const emitter = new EventEmitter()
+
 function insertDB(tbname, value) {
   let collect = db.getCollection(tbname);
   if(!collect)
@@ -65,15 +68,17 @@ rd.on('line', function(line) {
     startRead = true;
 });
 
-rd.on('close', () => {
-  const after = moment().subtract(1, 'years');
-  const before = moment().subtract(6, 'months');
-  const category = getCategoryList();
-  const res = getCategoryBalance(after, before, 'category_id', category[2])
+rd.on('close', () => emitter.emit('fileReading'))
 
-  console.log(res)
+function retreive(cb) {
+  const after = moment().subtract(1, 'years');
+  const before = moment().subtract(9, 'months');
+  const category = getCategoryList();
+  const res = getCategoryBalance(after, before, 'month', 'category_id', category[2])
+  return cb(res)
+
   // console.log(_.reduce(res, (prev, curr) => prev + curr, 0))
-});
+};
 
 let getCategoryList = () => {
   let cv = db.getCollection('category');
@@ -92,12 +97,6 @@ let getCategoryList = () => {
 }
 
 let getCategoryBalance = (after, before, unit = 'month', group = 'category_id', category = null) => {
-
-  while(after < before) {
-    after.set('month', after.month() +1)
-    after.startOf('month')
-    console.log(after)
-  }
 
   let dv = db.getCollection('transactions').addDynamicView('dv');
   dv.applyWhere( (obj) => {
@@ -141,4 +140,9 @@ let sumBalance = (data, type) => {
     colbalance[key] += trans_balance[key]
 
   return colbalance;
+}
+
+module.exports = {
+  retreive,
+  emitter
 }
