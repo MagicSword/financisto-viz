@@ -6,7 +6,7 @@
     "type": "git",
     "url": "git+https://github.com/chinuy/financisto-viz.git"
   },
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "test": "mocha"
   },
