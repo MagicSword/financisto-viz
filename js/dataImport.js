@@ -74,8 +74,12 @@ function retreive(cb) {
   const after = moment().subtract(1, 'years');
   const before = moment().subtract(9, 'months');
   const category = getCategoryList();
+<<<<<<< HEAD:js/dataImport.js
   const res = getCategoryBalance(after, before, 'month', 'category_id', category[2])
   return cb(res)
+=======
+  const res = getBalance(after, before, category[2], 'month', 'category_id')
+>>>>>>> f5af2de42be859d181ef15b0dd9c1ff3c3b97cee:lib/dataImport.js
 
   // console.log(_.reduce(res, (prev, curr) => prev + curr, 0))
 };
@@ -86,7 +90,7 @@ let getCategoryList = () => {
   const category = cv.data;
   let child = Object();
   category.forEach( (c1) => {
-    child[c1._id] = Array();
+    child[c1._id] = [c1._id];
     category.forEach( (c2) => {
       if (c1.left < c2.left && c1.right > c2.right) {
         child[c1._id].push(c2._id)
@@ -96,7 +100,7 @@ let getCategoryList = () => {
   return child;
 }
 
-let getCategoryBalance = (after, before, unit = 'month', group = 'category_id', category = null) => {
+let getBalance = (after, before, category, unit = 'month', group = 'category_id') => {
 
   let dv = db.getCollection('transactions').addDynamicView('dv');
   dv.applyWhere( (obj) => {
