@@ -3,6 +3,19 @@
   <head>
     <title>Money Flow</title>
 
+    <style>
+      .bar rect {
+        fill: steelblue;
+      }
+
+      .bar text {
+        fill: #fff;
+        font: 10px sans-serif;
+      }
+    </style>
+
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/photon.min.css">
 
@@ -10,14 +23,12 @@
     <script src="js/menu.js" charset="utf-8"></script>
     <script src="js/dataImport.js" charset="utf-8"></script>
     <script charset="utf-8">
-      function render() {
-        emitter.on('fileReading', () => {
-          retreive( res => {
-            console.log(res)
-          })
+      emitter.on('fileReading', () => {
+        retreive( res => {
+          //document.querySelector('#test').innerText = res
+          histogram(res)
         })
-      }
-      render()
+      })
     </script>
   </head>
   <body>
@@ -65,7 +76,10 @@
             </nav>
           </div>
 
-          <div class="pane">
+          <div class="pane" id="test">
+            <svg width="600" height="500"></svg>
+          </div>
+          <div class="pane" style="display: none">
             <table class="table-striped">
               <thead>
                 <tr>
@@ -82,5 +96,6 @@
         </div>
       </div>
     </div>
+    <script src="js/draw_hist.js"></script>
   </body>
 </html>

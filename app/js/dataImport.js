@@ -74,12 +74,11 @@ function retreive(cb) {
   const after = moment().subtract(1, 'years');
   const before = moment().subtract(9, 'months');
   const category = getCategoryList();
-<<<<<<< HEAD:js/dataImport.js
-  const res = getCategoryBalance(after, before, 'month', 'category_id', category[2])
-  return cb(res)
-=======
   const res = getBalance(after, before, category[2], 'month', 'category_id')
->>>>>>> f5af2de42be859d181ef15b0dd9c1ff3c3b97cee:lib/dataImport.js
+  data = _.reduce(data, (prev, curr) => prev + curr, 0) / 100
+  console.log(data)
+
+  return cb(res)
 
   // console.log(_.reduce(res, (prev, curr) => prev + curr, 0))
 };
@@ -102,7 +101,7 @@ let getCategoryList = () => {
 
 let getBalance = (after, before, category, unit = 'month', group = 'category_id') => {
 
-  let dv = db.getCollection('transactions').addDynamicView('dv');
+  let dv = db.getCollection('transactions').addDynamicView('d');
   dv.applyWhere( (obj) => {
     return obj.category_id !== '-1'
         && obj.datetime >  after.valueOf()
@@ -114,7 +113,7 @@ let getBalance = (after, before, category, unit = 'month', group = 'category_id'
       return _.includes(category, obj.category_id)
     });
   
-  return sumBalance(dv.data(), 'category_id');
+  return sumBalance(dv.data(), group);
 }
 
 // a transaction is composite of from_account and to_account
