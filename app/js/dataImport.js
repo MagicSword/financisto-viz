@@ -74,13 +74,16 @@ function retreive(cb) {
   const after = moment().subtract(1, 'years');
   const before = moment().subtract(9, 'months');
   const category = getCategoryList();
-  const res = getBalance(after, before, category[2], 'month', 'category_id')
-  data = _.reduce(data, (prev, curr) => prev + curr, 0) / 100
-  console.log(data)
+  const balance = getBalance(after, before, category[0], 'month', 'category_id')
+  console.log(balance)
+
+  let res = Array()
+  for(const k in balance) {
+    res.push({date: k,
+      value: -1 * _.reduce(balance[k], (prev, curr) => prev + curr, 0)})
+  }
 
   return cb(res)
-
-  // console.log(_.reduce(res, (prev, curr) => prev + curr, 0))
 };
 
 let getCategoryList = () => {
@@ -101,19 +104,32 @@ let getCategoryList = () => {
 
 let getBalance = (after, before, category, unit = 'month', group = 'category_id') => {
 
-  let dv = db.getCollection('transactions').addDynamicView('d');
-  dv.applyWhere( (obj) => {
-    return obj.category_id !== '-1'
-        && obj.datetime >  after.valueOf()
-        && obj.datetime <= before.valueOf()
-  });
+  let data = db.getCollection('transactions').chain()
+    .where( (obj) => {
+      return obj.category_id !== '-1'
+          && _.includes(category, obj.category_id)
+          && obj.datetime >  after.valueOf()
+          && obj.datetime <= before.valueOf()
+    })
 
-  if(category)
-    dv.applyWhere( (obj) => {
-      return _.includes(category, obj.category_id)
-    });
-  
-  return sumBalance(dv.data(), group);
+  let res = {}
+
+  while(after < before) {
+    let start = after.startOf(unit).valueOf()
+    after.set(unit, after.get(unit)+1)
+    let end = after.startOf(unit).valueOf()
+
+    let subdata = data.branch()
+      .where( (obj) => {
+        return obj.datetime >= start
+        && obj.datetime < end
+      })
+      .data()
+
+    res[start] = sumBalance(subdata, group)
+  }
+
+  return res
 }
 
 // a transaction is composite of from_account and to_account
