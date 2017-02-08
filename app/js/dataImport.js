@@ -71,16 +71,15 @@ rd.on('line', function(line) {
 rd.on('close', () => emitter.emit('fileReading'))
 
 function retreive(cb) {
-  const after = moment().subtract(1, 'years');
-  const before = moment().subtract(9, 'months');
+  const after = moment().subtract(1, 'years').startOf('months');
+  const before = moment().subtract(3, 'months').startOf('months');
   const category = getCategoryList();
   const balance = getBalance(after, before, category[0], 'month', 'category_id')
-  console.log(balance)
 
   let res = Array()
   for(const k in balance) {
     res.push({date: k,
-      value: -1 * _.reduce(balance[k], (prev, curr) => prev + curr, 0)})
+      value: _.reduce(balance[k], (prev, curr) => prev + curr, 0)})
   }
 
   return cb(res)
@@ -108,8 +107,8 @@ let getBalance = (after, before, category, unit = 'month', group = 'category_id'
     .where( (obj) => {
       return obj.category_id !== '-1'
           && _.includes(category, obj.category_id)
-          && obj.datetime >  after.valueOf()
-          && obj.datetime <= before.valueOf()
+          && obj.datetime >=  after.valueOf()
+          && obj.datetime < before.valueOf()
     })
 
   let res = {}
@@ -122,9 +121,11 @@ let getBalance = (after, before, category, unit = 'month', group = 'category_id'
     let subdata = data.branch()
       .where( (obj) => {
         return obj.datetime >= start
-        && obj.datetime < end
+          && obj.datetime < end
       })
       .data()
+    // let tmp = _.map(subdata, elm => elm.category_id + " " + elm.from_amount)
+    // console.log(tmp)
 
     res[start] = sumBalance(subdata, group)
   }
@@ -132,33 +133,18 @@ let getBalance = (after, before, category, unit = 'month', group = 'category_id'
   return res
 }
 
-// a transaction is composite of from_account and to_account
-// if 'to_account' is presented, this value needs to be stored
-// so after the reduce, the amount can be added accordingly
-let sumBalance = (data, type) => {
+let sumBalance = (data, group) => {
 
   // get account running balance
-  let acc_balance = _.groupBy(data, (trans) => {
-    return trans[type]
+  let raw_balance = _.groupBy(data, (trans) => {
+    return trans[group]
   })
 
-  let trans_balance = {};
-  for(let key in acc_balance)
-    trans_balance[key] = 0
-
-  let colbalance = _.transform(acc_balance, (res, trans, tag) => {
+  return _.transform(raw_balance, (res, trans, tag) => {
     res[tag] = trans.reduce( (prev, trans) => {
-      if(trans.to_account_id != '0')
-        trans_balance[trans.to_account_id] += trans.to_amount
-
-      return prev + trans.from_amount
+      return prev + trans.from_amount + trans.to_amount
     }, 0)
   }, {});
-
-  for(let key in colbalance)
-    colbalance[key] += trans_balance[key]
-
-  return colbalance;
 }
 
 module.exports = {
