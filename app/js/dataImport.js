@@ -74,6 +74,7 @@ function retreive(cb) {
   const after = moment().subtract(1, 'years').startOf('months');
   const before = moment().subtract(3, 'months').startOf('months');
   const category = getCategoryList();
+  console.log(category)
   const balance = getBalance(after, before, category[0], 'month', 'category_id')
 
   let res = Array()
@@ -88,17 +89,30 @@ function retreive(cb) {
 let getCategoryList = () => {
   let cv = db.getCollection('category');
 
-  const category = cv.data;
-  let child = Object();
-  category.forEach( (c1) => {
-    child[c1._id] = [c1._id];
-    category.forEach( (c2) => {
-      if (c1.left < c2.left && c1.right > c2.right) {
-        child[c1._id].push(c2._id)
+  const category = cv.data
+  let parent = null
+  let tree = Object()
+
+  _.forEach(category, (c) => {
+    while(parent != null) {
+      if(c.left > parent.left && c.right < parent.right) {
+        if(!parent.hasOwnProperty('child'))
+          parent.child = []
+        parent.child.push(c)
+        c.parent = parent
+        break
+      } else {
+        parent = parent.parent;
       }
-    });
+    }
+    if(parent === null) {
+      tree.root = c
+    }
+    if(c._id >= 0 && ((c.right - c.left) >1)) {
+      parent = c
+    }
   })
-  return child;
+  return tree
 }
 
 let getBalance = (after, before, category, unit = 'month', group = 'category_id') => {
@@ -148,6 +162,7 @@ let sumBalance = (data, group) => {
 }
 
 module.exports = {
+  getCategoryList,
   retreive,
   emitter
 }
