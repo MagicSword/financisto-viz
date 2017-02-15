@@ -113,11 +113,11 @@ rd.on('line', function(line) {
 
 rd.on('close', () => emitter.emit('fileReading'))
 
-function retreive(cb) {
+function retrieve(selectedItem, cb) {
   const after = moment().subtract(1, 'years').startOf('months');
   const before = moment().subtract(3, 'months').startOf('months');
   const category = getCategoryList();
-  const balance = getBalance(after, before, category[0], 'month', 'category_id')
+  const balance = getBalance(after, before, selectedItem, 'month', 'category_id')
 
   let res = Array()
   for(const k in balance) {
@@ -157,15 +157,16 @@ let getCategoryList = () => {
   return tree
 }
 
-let getBalance = (after, before, category, unit = 'month', group = 'category_id') => {
-
+let getBalance = (after, before, selectedItem, unit = 'month', group = 'category_id') => {
   let data = db.getCollection('transactions').chain()
     .where( (obj) => {
       return obj.category_id !== '-1'
-          && _.includes(category, obj.category_id)
           && obj.datetime >=  after.valueOf()
           && obj.datetime < before.valueOf()
     })
+
+  if(selectedItem.length > 0)
+    data.where(obj => _.includes(selectedItem, obj.category_id))
 
   let res = {}
 
@@ -205,6 +206,6 @@ let sumBalance = (data, group) => {
 
 module.exports = {
   getCategoryList,
-  retreive,
+  retrieve,
   emitter
 }

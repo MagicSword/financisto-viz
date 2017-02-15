@@ -3,10 +3,10 @@ function histogram(data) {
   data.forEach( elm => {
     elm.value = Math.round(elm.value / 100)
   })
-console.log(data)
 
   var parseTime = d3.timeFormat("%Y-%m");
 
+  //d3.select("svg").remove()
   var svg = d3.select("svg"),
       margin = {top: 20, right: 20, bottom: 30, left: 60},
       width = +svg.attr("width") - margin.left - margin.right,

@@ -25,8 +25,9 @@
     <script charset="utf-8">
       function renderCategoryTree(tree, c, embedHTML = "") {
           const title = tree.nodes[c].title
+          const id = tree.nodes[c].id
           return `
-          <span class="nav-group-item" id="${title}">
+          <span class="nav-group-item" id="c${id}">
             <span class="icon icon-home"></span>
             ${title}
             ${embedHTML}
@@ -34,20 +35,26 @@
       }
 
       emitter.on('fileReading', () => {
-        retreive( res => {
-          const tree = getCategoryList()
-          console.log(tree)
+        retrieve([], balance => histogram(balance))
 
-          const innerHTML = _.map(tree.root.child, (c) => {
-            const child = tree.nodes[c].child
-            const nestedChild = child.map(cid => renderCategoryTree(tree, cid)).join("")
-            return renderCategoryTree(tree, c, nestedChild)
-          }).join("")
-            
-          document.querySelector('nav .item').innerHTML = innerHTML 
-          histogram(res)
+        const tree = getCategoryList()
+        const innerHTML = _.map(tree.root.child, (c) => {
+          const child = tree.nodes[c].child
+          const nestedChild = child.map(cid => renderCategoryTree(tree, cid)).join("")
+          return renderCategoryTree(tree, c, nestedChild)
+        }).join("")
+        document.querySelector('nav .item').innerHTML = innerHTML 
+
+        document.getElementById('categoryTree').addEventListener('click', (event) => {
+          //retrieve([event.target.id], balance => histogram(balance))
         })
       })
+
+      function updateRender(selectedItem, balance) {
+        console.log(balance)
+        histogram(balance)
+      }
+
     </script>
   </head>
   <body>
@@ -64,7 +71,7 @@
           <div class="pane pane-sm sidebar">
             <nav class="nav-group">
               <h5 class="nav-group-title">Category</h5>
-              <nav class="item">
+              <nav class="item" id="categoryTree">
               </nav>
             </nav>
           </div>
