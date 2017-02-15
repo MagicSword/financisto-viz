@@ -36,7 +36,7 @@ class Category {
 
     this.parent = null
     this.child = []
-    this.allParent = [] // {id, span}
+    this.parentSpan = Number.MAX_SAFE_INTEGER
   }
 
   toString() {
@@ -47,14 +47,10 @@ class Category {
     this.child.push(c.id)
   }
 
-  addParent(c) {
-    this.allParent.push({id: c.id, span: c.right - c.left})
+  setParent(c, span) {
+    this.parent = c.id
+    this.parentSpan = span
   }
-
-  trimParent() {
-    this.parent = _.minBy(this.allParent, (p) => p.span)
-  }
-
 }
 
 function insertDB(tbname, value) {
@@ -121,7 +117,6 @@ function retreive(cb) {
   const after = moment().subtract(1, 'years').startOf('months');
   const before = moment().subtract(3, 'months').startOf('months');
   const category = getCategoryList();
-  console.log(category)
   const balance = getBalance(after, before, category[0], 'month', 'category_id')
 
   let res = Array()
@@ -144,21 +139,22 @@ let getCategoryList = () => {
     tree.addNode(node)
   })
   tree.root = tree.nodes[0]
+  let nodes = tree.nodes
 
-  _.forEach(tree.nodes, (c1) => {
-    _.forEach(tree.nodes, (c2) => {
+  _.forEach(nodes, (c1) => {
+    _.forEach(nodes, (c2) => {
       if (c1.left < c2.left && c1.right > c2.right) {
         c1.addChild(c2)
-        c2.addParent(c1)
+        if(c1.right - c1.left < c2.parentSpan)
+          c2.setParent(c1, c1.right - c1.left)
       }
     });
   })
-  _.forEach(tree.nodes, (n) => n.trimParent())
-  _.forEach(tree.nodes, (n) => {
-    _.remove(n.child, (c) => tree.nodes[c].parent.id !== n.id)
+  _.forEach(nodes, (n) => {
+    _.remove(n.child, (c) => nodes[c].parent !== n.id)
   })
 
-  return tree.listAll(tree.root)
+  return tree
 }
 
 let getBalance = (after, before, category, unit = 'month', group = 'category_id') => {
@@ -208,6 +204,7 @@ let sumBalance = (data, group) => {
 }
 
 module.exports = {
+  getCategoryList,
   retreive,
   emitter
 }
