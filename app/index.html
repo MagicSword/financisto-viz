@@ -23,9 +23,28 @@
     <script src="js/menu.js" charset="utf-8"></script>
     <script src="js/dataImport.js" charset="utf-8"></script>
     <script charset="utf-8">
+      function renderCategoryTree(tree, c, embedHTML = "") {
+          const title = tree.nodes[c].title
+          return `
+          <span class="nav-group-item" id="${title}">
+            <span class="icon icon-home"></span>
+            ${title}
+            ${embedHTML}
+          </span>\n`
+      }
+
       emitter.on('fileReading', () => {
         retreive( res => {
-          //document.querySelector('#test').innerText = res
+          const tree = getCategoryList()
+          console.log(tree)
+
+          const innerHTML = _.map(tree.root.child, (c) => {
+            const child = tree.nodes[c].child
+            const nestedChild = child.map(cid => renderCategoryTree(tree, cid)).join("")
+            return renderCategoryTree(tree, c, nestedChild)
+          }).join("")
+            
+          document.querySelector('nav .item').innerHTML = innerHTML 
           histogram(res)
         })
       })
@@ -44,42 +63,16 @@
         <div class="pane-group">
           <div class="pane pane-sm sidebar">
             <nav class="nav-group">
-              <h5 class="nav-group-title">Favorites</h5>
-              <span class="nav-group-item">
-                <span class="icon icon-home"></span>
-                connors
-              </span>
-              <span class="nav-group-item active">
-                <span class="icon icon-light-up"></span>
-                Photon
-              </span>
-              <span class="nav-group-item">
-                <span class="icon icon-download"></span>
-                Downloads
-              </span>
-              <span class="nav-group-item">
-                <span class="icon icon-folder"></span>
-                Documents
-              </span>
-              <span class="nav-group-item">
-                <span class="icon icon-window"></span>
-                Applications
-              </span>
-              <span class="nav-group-item">
-                <span class="icon icon-signal"></span>
-                AirDrop
-              </span>
-              <span class="nav-group-item">
-                <span class="icon icon-monitor"></span>
-                Desktop
-              </span>
+              <h5 class="nav-group-title">Category</h5>
+              <nav class="item">
+              </nav>
             </nav>
           </div>
 
-          <div class="pane" id="test">
+          <div class="pane" id="svg">
             <svg width="600" height="500"></svg>
           </div>
-          <div class="pane" style="display: none">
+          <div class="pane" style="display:none">
             <table class="table-striped">
               <thead>
                 <tr>
