@@ -28,7 +28,7 @@
           const id = tree.nodes[c].id
           return `
           <span class="nav-group-item" id="c${id}">
-            <span class="icon icon-home"></span>
+            <span class="icon icon-check"></span>
             ${title}
             ${embedHTML}
           </span>\n`
@@ -46,7 +46,17 @@
         document.querySelector('nav .item').innerHTML = innerHTML 
 
         document.getElementById('categoryTree').addEventListener('click', (event) => {
-          //retrieve([event.target.id], balance => histogram(balance))
+          event.preventDefault()
+
+          let e = event.target
+          if(e.classList.contains('icon')) e = e.parentNode
+          let on = e.firstElementChild.classList.toggle('icon-check')
+          let keys = Object.keys(e.children).filter(k => k.startsWith('c'))
+          keys.forEach( key => {
+            e.children[key].firstElementChild.classList.toggle("icon-check", on)
+          })
+
+          let check = _.map(document.querySelectorAll('.icon-check'),(c => c.parentNode.id))
         })
       })
 
