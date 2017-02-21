@@ -21,9 +21,7 @@ class CategoryTree {
   }
 
   listAll(n) {
-    return {id: n.id, title: n.title,
-      child: n.child.map((c) => this.listAll(this.nodes[c]))
-    }
+    return _.flattenDeep([n.id].concat(n.child.map(c => this.listAll(this.nodes[c]))))
   }
 }
 
@@ -113,19 +111,10 @@ rd.on('line', function(line) {
 
 rd.on('close', () => emitter.emit('fileReading'))
 
-function retrieve(selectedItem, cb) {
+function retrieve(cb) {
   const after = moment().subtract(1, 'years').startOf('months');
   const before = moment().subtract(3, 'months').startOf('months');
-  const category = getCategoryList();
-  const balance = getBalance(after, before, selectedItem, 'month', 'category_id')
-
-  let res = Array()
-  for(const k in balance) {
-    res.push({date: k,
-      value: _.reduce(balance[k], (prev, curr) => prev + curr, 0)})
-  }
-
-  return cb(res)
+  getBalance(after, before, 'month', balance => cb(balance))
 };
 
 let getCategoryList = () => {
@@ -157,7 +146,8 @@ let getCategoryList = () => {
   return tree
 }
 
-let getBalance = (after, before, selectedItem, unit = 'month', group = 'category_id') => {
+let getBalance = (after, before, unit = 'month', cb) => {
+  let group = 'category_id'
   let data = db.getCollection('transactions').chain()
     .where( (obj) => {
       return obj.category_id !== '-1'
@@ -165,10 +155,7 @@ let getBalance = (after, before, selectedItem, unit = 'month', group = 'category
           && obj.datetime < before.valueOf()
     })
 
-  if(selectedItem.length > 0)
-    data.where(obj => _.includes(selectedItem, obj.category_id))
-
-  let res = {}
+  let res = []
 
   while(after < before) {
     let start = after.startOf(unit).valueOf()
@@ -184,10 +171,10 @@ let getBalance = (after, before, selectedItem, unit = 'month', group = 'category
     // let tmp = _.map(subdata, elm => elm.category_id + " " + elm.from_amount)
     // console.log(tmp)
 
-    res[start] = sumBalance(subdata, group)
+    res.push({date: start, value: sumBalance(subdata, group)})
   }
 
-  return res
+  return cb(res)
 }
 
 let sumBalance = (data, group) => {

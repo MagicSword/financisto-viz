@@ -35,9 +35,17 @@
       }
 
       emitter.on('fileReading', () => {
-        retrieve([], balance => histogram(balance))
-
         const tree = getCategoryList()
+        let selectedItem = tree.listAll(tree.root)
+        retrieve(balance => histogram(balance.map( bal => {
+          return {
+            date: bal.date,
+            value: _.sum(
+            _.filter(bal.value, (val, key) => selectedItem.includes(key.toString()))
+            )
+          }
+        })))
+
         const innerHTML = _.map(tree.root.child, (c) => {
           const child = tree.nodes[c].child
           const nestedChild = child.map(cid => renderCategoryTree(tree, cid)).join("")
