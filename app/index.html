@@ -37,14 +37,7 @@
       emitter.on('fileReading', () => {
         const tree = getCategoryList()
         let selectedItem = tree.listAll(tree.root)
-        retrieve(balance => histogram(balance.map( bal => {
-          return {
-            date: bal.date,
-            value: _.sum(
-            _.filter(bal.value, (val, key) => selectedItem.includes(key.toString()))
-            )
-          }
-        })))
+        retrieve(selectedItem, balance => histogram(balance))
 
         const innerHTML = _.map(tree.root.child, (c) => {
           const child = tree.nodes[c].child
@@ -64,7 +57,8 @@
             e.children[key].firstElementChild.classList.toggle("icon-check", on)
           })
 
-          let check = _.map(document.querySelectorAll('.icon-check'),(c => c.parentNode.id))
+          selectedItem  = _.map(document.querySelectorAll('.icon-check'),(c => c.parentNode.id.substr(1)))
+          retrieve(selectedItem, balance => histogram(balance))
         })
       })
 

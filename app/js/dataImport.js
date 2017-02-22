@@ -111,10 +111,10 @@ rd.on('line', function(line) {
 
 rd.on('close', () => emitter.emit('fileReading'))
 
-function retrieve(cb) {
+function retrieve(selectedItem, cb) {
   const after = moment().subtract(1, 'years').startOf('months');
   const before = moment().subtract(3, 'months').startOf('months');
-  getBalance(after, before, 'month', balance => cb(balance))
+  getBalance(after, before, selectedItem, 'month', balance => cb(balance))
 };
 
 let getCategoryList = () => {
@@ -146,7 +146,7 @@ let getCategoryList = () => {
   return tree
 }
 
-let getBalance = (after, before, unit = 'month', cb) => {
+let getBalance = (after, before, selectedItem, unit = 'month', cb) => {
   let group = 'category_id'
   let data = db.getCollection('transactions').chain()
     .where( (obj) => {
@@ -154,6 +154,9 @@ let getBalance = (after, before, unit = 'month', cb) => {
           && obj.datetime >=  after.valueOf()
           && obj.datetime < before.valueOf()
     })
+
+  if(selectedItem.length > 0)
+    data = data.where( obj => selectedItem.includes(obj.category_id) )
 
   let res = []
 
@@ -171,7 +174,9 @@ let getBalance = (after, before, unit = 'month', cb) => {
     // let tmp = _.map(subdata, elm => elm.category_id + " " + elm.from_amount)
     // console.log(tmp)
 
-    res.push({date: start, value: sumBalance(subdata, group)})
+    res.push({date: start, value: subdata.reduce( (prev, curr) => {
+      return prev + curr.from_amount + curr.to_amount
+    }, 0)})
   }
 
   return cb(res)
