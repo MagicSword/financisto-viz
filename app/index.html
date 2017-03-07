@@ -35,6 +35,7 @@
       }
 
       emitter.on('fileReading', () => {
+        init()
         const tree = getCategoryList()
         let selectedItem = tree.listAll(tree.root)
         retrieve(selectedItem, balance => histogram(balance))
